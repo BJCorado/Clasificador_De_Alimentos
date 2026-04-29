@@ -15,8 +15,8 @@ data/
 # =========================
 # ENTORNO VIRTUAL
 # =========================
-venv/
-.env/
+venv310/
+.env
 
 # =========================
 # ARCHIVOS DE PYTHON
