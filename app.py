@@ -3,30 +3,23 @@ import torch
 import torch.nn as nn
 from torchvision import transforms
 from torchvision.models import efficientnet_b0
-from PIL import Image
+from PIL import Image, ImageOps
 import json
 
 # =========================
-# CARGAR CLASES (ORDEN CORRECTO)
+# CARGAR CLASES
 # =========================
-import json
-
 with open("models/classes.json") as f:
     CLASSES = json.load(f)
 
 # =========================
-# INFO
+# CARGAR INFO NUTRICIONAL
 # =========================
-FOOD_MAP = {
-    'pizza': ('Ultraprocesado', '🔴', 'Evitar exceso'),
-    'hamburger': ('Ultraprocesado', '🔴', 'Alto en grasas'),
-    'ceviche': ('Fresco', '🟢', 'Buena opción'),
-    'tacos': ('Mixto', '🟡', 'Depende de ingredientes'),
-    'ice_cream': ('Azucarado', '🔴', 'Consumo ocasional'),
-}
+with open("models/food_info.json") as f:
+    FOOD_INFO = json.load(f)
 
 # =========================
-# CARGAR MODELO (BIEN HECHO)
+# MODELO
 # =========================
 @st.cache_resource
 def load_model():
@@ -43,7 +36,7 @@ def load_model():
 model = load_model()
 
 # =========================
-# TRANSFORM CORRECTO (CRÍTICO)
+# TRANSFORM
 # =========================
 transform = transforms.Compose([
     transforms.Resize((224,224)),
@@ -60,7 +53,7 @@ st.write("Herramienta educativa. Consulte a un nutricionista.")
 modo = st.radio("Selecciona modo:", ["📷 Cámara", "🖼️ Subir imagen"])
 
 # =========================
-# FUNCIÓN DE PREDICCIÓN
+# PREDICCIÓN
 # =========================
 def predict(image):
     img_tensor = transform(image).unsqueeze(0)
@@ -75,14 +68,39 @@ def predict(image):
     for i in range(3):
         clase = CLASSES[top_classes[0][i].item()]
         confianza = float(top_probs[0][i])
+        info = FOOD_INFO.get(clase, {})
 
-        categoria, color, consejo = FOOD_MAP.get(
-            clase, ("Desconocido", "⚪", "")
-        )
-
-        resultados.append((clase, confianza, categoria, color, consejo))
+        resultados.append({
+            "clase": clase,
+            "confianza": confianza,
+            "info": info
+        })
 
     return resultados
+
+# =========================
+# MOSTRAR RESULTADO
+# =========================
+def mostrar_resultados(resultados):
+    top1 = resultados[0]
+    info = top1["info"]
+
+    st.subheader("Resultado principal")
+
+    st.write(f"**{top1['clase']}** ({top1['confianza']:.2f})")
+    st.progress(top1["confianza"])
+
+    st.write(f"{info.get('categoria','')} {info.get('color','')}")
+    st.write(f"🔥 Calorías: {info.get('calorias','-')}")
+    st.write(f"🥩 Proteína: {info.get('proteina','-')}")
+    st.write(f"🧈 Grasas: {info.get('grasas','-')}")
+    st.write(f"🍬 Azúcar: {info.get('azucar','-')}")
+    st.write(f"💡 {info.get('consejo','')}")
+
+    st.subheader("🤔 Otras posibilidades")
+
+    for r in resultados[1:]:
+        st.write(f"{r['clase']} ({r['confianza']:.2f})")
 
 # =========================
 # MODO CÁMARA
@@ -93,17 +111,8 @@ if modo == "📷 Cámara":
 
     if img_file:
         image = Image.open(img_file).convert("RGB")
-        st.image(image, caption="Captura")
-
         resultados = predict(image)
-
-        st.subheader("🔍 Predicciones:")
-
-        for i, (clase, confianza, categoria, color, consejo) in enumerate(resultados):
-            st.write(f"**{i+1}. {clase}** ({confianza:.2f})")
-            st.progress(confianza)
-            st.write(f"{categoria} {color} - {consejo}")
-            st.write("---")
+        mostrar_resultados(resultados)
 
 # =========================
 # MODO SUBIR IMAGEN
@@ -114,14 +123,8 @@ else:
 
     if img_file:
         image = Image.open(img_file).convert("RGB")
+
         st.image(image, caption="Imagen cargada")
 
         resultados = predict(image)
-
-        st.subheader("🔍 Predicciones:")
-
-        for i, (clase, confianza, categoria, color, consejo) in enumerate(resultados):
-            st.write(f"**{i+1}. {clase}** ({confianza:.2f})")
-            st.progress(confianza)
-            st.write(f"{categoria} {color} - {consejo}")
-            st.write("---")
+        mostrar_resultados(resultados)

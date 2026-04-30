@@ -1,0 +1,92 @@
+{
+  "pizza": {
+    "categoria": "Ultraprocesado",
+    "color": "🔴",
+    "calorias": "266 kcal / 100g",
+    "proteina": "11 g",
+    "grasas": "10 g",
+    "azucar": "3.6 g",
+    "consejo": "Alto en grasas y sodio. Consumir ocasionalmente."
+  },
+  "hamburger": {
+    "categoria": "Ultraprocesado",
+    "color": "🔴",
+    "calorias": "295 kcal",
+    "proteina": "17 g",
+    "grasas": "14 g",
+    "azucar": "5 g",
+    "consejo": "Alto en grasas saturadas. Evitar consumo frecuente."
+  },
+  "ceviche": {
+    "categoria": "Fresco",
+    "color": "🟢",
+    "calorias": "120 kcal",
+    "proteina": "20 g",
+    "grasas": "2 g",
+    "azucar": "1 g",
+    "consejo": "Alto en proteína y bajo en grasa. Buena opción saludable."
+  },
+  "tacos": {
+    "categoria": "Mixto",
+    "color": "🟡",
+    "calorias": "226 kcal",
+    "proteina": "9 g",
+    "grasas": "14 g",
+    "azucar": "2 g",
+    "consejo": "Depende del relleno. Puede ser saludable si es casero."
+  },
+  "steak": {
+    "categoria": "Fresco",
+    "color": "🟢",
+    "calorias": "271 kcal",
+    "proteina": "25 g",
+    "grasas": "19 g",
+    "azucar": "0 g",
+    "consejo": "Rico en proteína. Moderar por contenido de grasa."
+  },
+  "ramen": {
+    "categoria": "Ultraprocesado",
+    "color": "🔴",
+    "calorias": "436 kcal",
+    "proteina": "10 g",
+    "grasas": "14 g",
+    "azucar": "3 g",
+    "consejo": "Muy alto en sodio. Evitar consumo frecuente."
+  },
+  "ice_cream": {
+    "categoria": "Azucarado",
+    "color": "🔴",
+    "calorias": "207 kcal",
+    "proteina": "3.5 g",
+    "grasas": "11 g",
+    "azucar": "21 g",
+    "consejo": "Alto en azúcar. Consumir ocasionalmente."
+  },
+  "spaghetti_bolognese": {
+    "categoria": "Procesado",
+    "color": "🟡",
+    "calorias": "158 kcal",
+    "proteina": "6 g",
+    "grasas": "6 g",
+    "azucar": "3 g",
+    "consejo": "Balanceado, pero puede ser alto en carbohidratos."
+  },
+  "fried_rice": {
+    "categoria": "Procesado",
+    "color": "🟡",
+    "calorias": "163 kcal",
+    "proteina": "5 g",
+    "grasas": "6 g",
+    "azucar": "1 g",
+    "consejo": "Puede ser alto en sodio y aceite."
+  },
+  "chicken_wings": {
+    "categoria": "Ultraprocesado",
+    "color": "🔴",
+    "calorias": "203 kcal",
+    "proteina": "30 g",
+    "grasas": "8 g",
+    "azucar": "0 g",
+    "consejo": "Alto en grasas si es frito. Mejor al horno."
+  }
+}
