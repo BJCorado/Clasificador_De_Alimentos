@@ -65,36 +65,67 @@ def predict(image):
     top_probs, top_classes = torch.topk(probs, 3)
 
     resultados = []
-    for i in range(3):
-        clase = CLASSES[top_classes[0][i].item()]
-        confianza = float(top_probs[0][i])
-        info = FOOD_INFO.get(clase, {})
 
-        resultados.append({
-            "clase": clase,
-            "confianza": confianza,
-            "info": info
-        })
+    top1_conf = float(top_probs[0][0])
+    top1_class = CLASSES[top_classes[0][0].item()]
 
-    return resultados
+    # DESCONOCIDO
+    if top1_conf < 0.70:
+        return {
+            "main": {
+                "clase": "Desconocido",
+                "confianza": top1_conf,
+                "info": {
+                    "categoria": "No identificado",
+                    "color": "#888",
+                    "calorias": "-",
+                    "proteina": "-",
+                    "grasas": "-",
+                    "azucar": "-",
+                    "consejo": "El modelo no está seguro."
+                }
+            },
+            "others": []
+        }
 
+    # PRINCIPAL
+    main = {
+        "clase": top1_class,
+        "confianza": top1_conf,
+        "info": FOOD_INFO.get(top1_class, {})
+    }
+
+    # OTRAS (solo si ≥ 0.30)
+    others = []
+    for i in range(1, 3):
+        conf = float(top_probs[0][i])
+
+        if conf >= 0.30:
+            clase = CLASSES[top_classes[0][i].item()]
+            others.append({
+                "clase": clase,
+                "confianza": conf
+            })
+
+    return {
+        "main": main,
+        "others": others
+    }
 # =========================
 # MOSTRAR RESULTADO
 # =========================
 def mostrar_resultados(resultados):
-    top1 = resultados[0]
+    top1 = resultados["main"]
     info = top1["info"]
-
-    # 🔹 Extraer valores correctamente
-    categoria = info.get("categoria", "Desconocido")
-    color = info.get("color", "#999")
 
     st.subheader("Resultado principal")
 
     st.write(f"**{top1['clase']}** ({top1['confianza']:.2f})")
     st.progress(top1["confianza"])
 
-    # 🔥 Caja visual tipo semáforo
+    color = info.get("color", "#999")
+    categoria = info.get("categoria", "Desconocido")
+
     st.markdown(f"""
     <div style="
         background-color:{color};
@@ -104,7 +135,7 @@ def mostrar_resultados(resultados):
         font-weight:bold;
         width:fit-content;
     ">
-        {categoria}
+    {categoria}
     </div>
     """, unsafe_allow_html=True)
 
@@ -114,11 +145,12 @@ def mostrar_resultados(resultados):
     st.write(f"🍬 Azúcar: {info.get('azucar','-')}")
     st.write(f"💡 {info.get('consejo','')}")
 
-    st.subheader("🤔 Otras posibilidades")
+    # SOLO SI HAY OTRAS
+    if resultados["others"]:
+        st.subheader("🤔 Otras posibilidades")
 
-    for r in resultados[1:]:
-        st.write(f"{r['clase']} ({r['confianza']:.2f})")
-
+        for r in resultados["others"]:
+            st.write(f"{r['clase']} ({r['confianza']:.2f})")
 # =========================
 # MODO CÁMARA
 # =========================
