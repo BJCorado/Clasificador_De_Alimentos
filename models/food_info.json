@@ -1,7 +1,7 @@
 {
   "pizza": {
     "categoria": "Ultraprocesado",
-    "color": "🔴",
+    "color": "#FF4B4B",
     "calorias": "266 kcal / 100g",
     "proteina": "11 g",
     "grasas": "10 g",
@@ -10,7 +10,7 @@
   },
   "hamburger": {
     "categoria": "Ultraprocesado",
-    "color": "🔴",
+    "color": "#FF4B4B",
     "calorias": "295 kcal",
     "proteina": "17 g",
     "grasas": "14 g",
@@ -19,7 +19,7 @@
   },
   "ceviche": {
     "categoria": "Fresco",
-    "color": "🟢",
+    "color": "#2ECC71",
     "calorias": "120 kcal",
     "proteina": "20 g",
     "grasas": "2 g",
@@ -28,7 +28,7 @@
   },
   "tacos": {
     "categoria": "Mixto",
-    "color": "🟡",
+    "color": "#F1C40F",
     "calorias": "226 kcal",
     "proteina": "9 g",
     "grasas": "14 g",
@@ -37,7 +37,7 @@
   },
   "steak": {
     "categoria": "Fresco",
-    "color": "🟢",
+    "color": "#2ECC71",
     "calorias": "271 kcal",
     "proteina": "25 g",
     "grasas": "19 g",
@@ -46,7 +46,7 @@
   },
   "ramen": {
     "categoria": "Ultraprocesado",
-    "color": "🔴",
+    "color": "#FF4B4B",
     "calorias": "436 kcal",
     "proteina": "10 g",
     "grasas": "14 g",
@@ -55,7 +55,7 @@
   },
   "ice_cream": {
     "categoria": "Azucarado",
-    "color": "🔴",
+    "color": "#FF4B4B",
     "calorias": "207 kcal",
     "proteina": "3.5 g",
     "grasas": "11 g",
@@ -64,7 +64,7 @@
   },
   "spaghetti_bolognese": {
     "categoria": "Procesado",
-    "color": "🟡",
+    "color": "#F1C40F",
     "calorias": "158 kcal",
     "proteina": "6 g",
     "grasas": "6 g",
@@ -73,7 +73,7 @@
   },
   "fried_rice": {
     "categoria": "Procesado",
-    "color": "🟡",
+    "color": "#F1C40F",
     "calorias": "163 kcal",
     "proteina": "5 g",
     "grasas": "6 g",
@@ -82,7 +82,7 @@
   },
   "chicken_wings": {
     "categoria": "Ultraprocesado",
-    "color": "🔴",
+    "color": "#FF4B4B",
     "calorias": "203 kcal",
     "proteina": "30 g",
     "grasas": "8 g",

@@ -85,12 +85,29 @@ def mostrar_resultados(resultados):
     top1 = resultados[0]
     info = top1["info"]
 
+    # 🔹 Extraer valores correctamente
+    categoria = info.get("categoria", "Desconocido")
+    color = info.get("color", "#999")
+
     st.subheader("Resultado principal")
 
     st.write(f"**{top1['clase']}** ({top1['confianza']:.2f})")
     st.progress(top1["confianza"])
 
-    st.write(f"{info.get('categoria','')} {info.get('color','')}")
+    # 🔥 Caja visual tipo semáforo
+    st.markdown(f"""
+    <div style="
+        background-color:{color};
+        padding:10px;
+        border-radius:10px;
+        color:white;
+        font-weight:bold;
+        width:fit-content;
+    ">
+        {categoria}
+    </div>
+    """, unsafe_allow_html=True)
+
     st.write(f"🔥 Calorías: {info.get('calorias','-')}")
     st.write(f"🥩 Proteína: {info.get('proteina','-')}")
     st.write(f"🧈 Grasas: {info.get('grasas','-')}")
