@@ -1,21 +1,21 @@
 {
-  "pizza": {
-    "categoria": "Ultraprocesado",
-    "color": "#FF4B4B",
-    "calorias": "266 kcal / 100g",
-    "proteina": "11 g",
-    "grasas": "10 g",
-    "azucar": "3.6 g",
-    "consejo": "Alto en grasas y sodio. Consumir ocasionalmente."
+  "apple": {
+    "categoria": "Fresco",
+    "color": "#2ECC71",
+    "calorias": "52 kcal / 100g",
+    "proteina": "0.3 g",
+    "grasas": "0.2 g",
+    "azucar": "10.4 g",
+    "consejo": "Excelente fuente de fibra y vitaminas. Ideal como snack saludable."
   },
-  "hamburger": {
-    "categoria": "Ultraprocesado",
-    "color": "#FF4B4B",
-    "calorias": "295 kcal",
-    "proteina": "17 g",
-    "grasas": "14 g",
-    "azucar": "5 g",
-    "consejo": "Alto en grasas saturadas. Evitar consumo frecuente."
+  "banana": {
+    "categoria": "Fresco",
+    "color": "#2ECC71",
+    "calorias": "89 kcal / 100g",
+    "proteina": "1.1 g",
+    "grasas": "0.3 g",
+    "azucar": "12.2 g",
+    "consejo": "Rica en potasio y energía rápida. Perfecta para antes de hacer ejercicio."
   },
   "ceviche": {
     "categoria": "Fresco",
@@ -26,50 +26,41 @@
     "azucar": "1 g",
     "consejo": "Alto en proteína y bajo en grasa. Buena opción saludable."
   },
-  "tacos": {
-    "categoria": "Mixto",
-    "color": "#F1C40F",
-    "calorias": "226 kcal",
-    "proteina": "9 g",
-    "grasas": "14 g",
-    "azucar": "2 g",
-    "consejo": "Depende del relleno. Puede ser saludable si es casero."
-  },
-  "steak": {
-    "categoria": "Fresco",
-    "color": "#2ECC71",
-    "calorias": "271 kcal",
-    "proteina": "25 g",
-    "grasas": "19 g",
-    "azucar": "0 g",
-    "consejo": "Rico en proteína. Moderar por contenido de grasa."
-  },
-  "ramen": {
+  "chicken_wings": {
     "categoria": "Ultraprocesado",
     "color": "#FF4B4B",
-    "calorias": "436 kcal",
-    "proteina": "10 g",
-    "grasas": "14 g",
-    "azucar": "3 g",
-    "consejo": "Muy alto en sodio. Evitar consumo frecuente."
+    "calorias": "203 kcal",
+    "proteina": "30 g",
+    "grasas": "8 g",
+    "azucar": "0 g",
+    "consejo": "Alto en grasas si es frito. Mejor al horno."
   },
-  "ice_cream": {
+  "coca_cola": {
     "categoria": "Azucarado",
     "color": "#FF4B4B",
-    "calorias": "207 kcal",
-    "proteina": "3.5 g",
-    "grasas": "11 g",
-    "azucar": "21 g",
-    "consejo": "Alto en azúcar. Consumir ocasionalmente."
+    "calorias": "150 kcal / 355ml",
+    "proteina": "0 g",
+    "grasas": "0 g",
+    "azucar": "39 g",
+    "consejo": "Muy alto en azúcares añadidos. Evitar su consumo habitual."
   },
-  "spaghetti_bolognese": {
-    "categoria": "Procesado",
-    "color": "#F1C40F",
-    "calorias": "158 kcal",
-    "proteina": "6 g",
-    "grasas": "6 g",
-    "azucar": "3 g",
-    "consejo": "Balanceado, pero puede ser alto en carbohidratos."
+  "coffee": {
+    "categoria": "Natural",
+    "color": "#2ECC71",
+    "calorias": "1-2 kcal / 100ml",
+    "proteina": "0.1 g",
+    "grasas": "0 g",
+    "azucar": "0 g",
+    "consejo": "Bajo en calorías si se toma solo. Moderar el uso de azúcar o cremas."
+  },
+  "french_fries": {
+    "categoria": "Ultraprocesado",
+    "color": "#FF4B4B",
+    "calorias": "312 kcal / 100g",
+    "proteina": "3.4 g",
+    "grasas": "15 g",
+    "azucar": "0.3 g",
+    "consejo": "Alto contenido en sodio y grasas saturadas. Consumir con moderación."
   },
   "fried_rice": {
     "categoria": "Procesado",
@@ -80,13 +71,121 @@
     "azucar": "1 g",
     "consejo": "Puede ser alto en sodio y aceite."
   },
-  "chicken_wings": {
+  "hamburger": {
     "categoria": "Ultraprocesado",
     "color": "#FF4B4B",
-    "calorias": "203 kcal",
-    "proteina": "30 g",
-    "grasas": "8 g",
+    "calorias": "295 kcal",
+    "proteina": "17 g",
+    "grasas": "14 g",
+    "azucar": "5 g",
+    "consejo": "Alto en grasas saturadas. Evitar consumo frecuente."
+  },
+  "ice_cream": {
+    "categoria": "Azucarado",
+    "color": "#FF4B4B",
+    "calorias": "207 kcal",
+    "proteina": "3.5 g",
+    "grasas": "11 g",
+    "azucar": "21 g",
+    "consejo": "Alto en azúcar. Consumir ocasionalmente."
+  },
+  "lemon": {
+    "categoria": "Fresco",
+    "color": "#2ECC71",
+    "calorias": "29 kcal / 100g",
+    "proteina": "1.1 g",
+    "grasas": "0.3 g",
+    "azucar": "2.5 g",
+    "consejo": "Gran aporte de vitamina C. Úsalo para dar sabor sin añadir calorías."
+  },
+  "mango": {
+    "categoria": "Fresco",
+    "color": "#2ECC71",
+    "calorias": "60 kcal / 100g",
+    "proteina": "0.8 g",
+    "grasas": "0.4 g",
+    "azucar": "14 g",
+    "consejo": "Rico en antioxidantes y vitaminas, aunque alto en azúcares naturales."
+  },
+  "monster_energy": {
+    "categoria": "Ultraprocesado",
+    "color": "#FF4B4B",
+    "calorias": "230 kcal / lata",
+    "proteina": "0 g",
+    "grasas": "0 g",
+    "azucar": "54 g",
+    "consejo": "Muy alto en cafeína y azúcar. No recomendado para niños ni deportistas en exceso."
+  },
+  "nachos": {
+    "categoria": "Ultraprocesado",
+    "color": "#FF4B4B",
+    "calorias": "343 kcal / 100g",
+    "proteina": "4.3 g",
+    "grasas": "22 g",
+    "azucar": "2.2 g",
+    "consejo": "Muy densos en calorías y grasas por el queso y fritura. Porción moderada."
+  },
+  "pizza": {
+    "categoria": "Ultraprocesado",
+    "color": "#FF4B4B",
+    "calorias": "266 kcal / 100g",
+    "proteina": "11 g",
+    "grasas": "10 g",
+    "azucar": "3.6 g",
+    "consejo": "Alto en grasas y sodio. Consumir ocasionalmente."
+  },
+  "ramen": {
+    "categoria": "Ultraprocesado",
+    "color": "#FF4B4B",
+    "calorias": "436 kcal",
+    "proteina": "10 g",
+    "grasas": "14 g",
+    "azucar": "3 g",
+    "consejo": "Muy alto en sodio. Evitar consumo frecuente."
+  },
+  "spaghetti_bolognese": {
+    "categoria": "Procesado",
+    "color": "#F1C40F",
+    "calorias": "158 kcal",
+    "proteina": "6 g",
+    "grasas": "6 g",
+    "azucar": "3 g",
+    "consejo": "Balanceado, pero puede ser alto en carbohidratos."
+  },
+  "steak": {
+    "categoria": "Fresco",
+    "color": "#2ECC71",
+    "calorias": "271 kcal",
+    "proteina": "25 g",
+    "grasas": "19 g",
     "azucar": "0 g",
-    "consejo": "Alto en grasas si es frito. Mejor al horno."
+    "consejo": "Rico en proteína. Moderar por contenido de grasa."
+  },
+  "tacos": {
+    "categoria": "Mixto",
+    "color": "#F1C40F",
+    "calorias": "226 kcal",
+    "proteina": "9 g",
+    "grasas": "14 g",
+    "azucar": "2 g",
+    "consejo": "Depende del relleno. Puede ser saludable si es casero."
+  },
+  "water_bottle": {
+    "categoria": "Natural",
+    "color": "#2ECC71",
+    "calorias": "0 kcal",
+    "proteina": "0 g",
+    "grasas": "0 g",
+    "azucar": "0 g",
+    "consejo": "La mejor opción para hidratación diaria. Imprescindible."
+  },
+  "watermelon": {
+    "categoria": "Fresco",
+    "color": "#2ECC71",
+    "calorias": "30 kcal / 100g",
+    "proteina": "0.6 g",
+    "grasas": "0.2 g",
+    "azucar": "6.2 g",
+    "consejo": "Muy hidratante (92% agua) y baja en calorías. Excelente postre natural."
   }
 }
