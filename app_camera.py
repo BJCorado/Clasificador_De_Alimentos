@@ -1,17 +1,36 @@
+import streamlit as st
+import torch
+import torch.nn as nn
+import av
 import cv2
 import json
 import time
-import torch
-import torch.nn as nn
 
 from PIL import Image
 from torchvision import transforms
 from torchvision.models import efficientnet_b0
 
+from streamlit_option_menu import option_menu
+from streamlit_webrtc import (
+    webrtc_streamer,
+    VideoProcessorBase,
+    RTCConfiguration
+)
 
-# =================================
+
+# =========================
+# CONFIG
+# =========================
+st.set_page_config(
+    page_title="Food Vision AI",
+    page_icon="🥗",
+    layout="wide"
+)
+
+
+# =========================
 # DATA
-# =================================
+# =========================
 with open("models/classes.json", encoding="utf-8") as f:
     CLASSES = json.load(f)
 
@@ -22,615 +41,427 @@ with open(
     FOOD_INFO = json.load(f)
 
 
-# =================================
+# =========================
 # MODEL
-# =================================
-print("Cargando modelo...")
+# =========================
+@st.cache_resource
+def load_model():
 
-model = efficientnet_b0(
-    weights=None
-)
-
-model.classifier[1] = nn.Linear(
-    1280,
-    len(CLASSES)
-)
-
-model.load_state_dict(
-    torch.load(
-        "models/modelo_efficientnet.pth",
-        map_location="cpu",
-        weights_only=True
+    model = efficientnet_b0(
+        weights=None
     )
-)
 
-model.eval()
+    model.classifier[1] = nn.Linear(
+        1280,
+        len(CLASSES)
+    )
+
+    model.load_state_dict(
+        torch.load(
+            "models/modelo_efficientnet.pth",
+            map_location="cpu",
+            weights_only=True
+        )
+    )
+
+    model.eval()
+
+    return model
 
 
-# =================================
+model = load_model()
+
+
+# =========================
 # TRANSFORM
-# =================================
+# =========================
 transform = transforms.Compose([
-    transforms.Resize((224, 224)),
+    transforms.Resize((224,224)),
     transforms.ToTensor(),
     transforms.Normalize(
-        [0.485, 0.456, 0.406],
-        [0.229, 0.224, 0.225]
+        [0.485,0.456,0.406],
+        [0.229,0.224,0.225]
     )
 ])
 
 
-# =================================
-# COLORS
-# =================================
-BG = (15, 18, 30)
-
-WHITE = (255, 255, 255)
-
-GREEN = (0, 220, 120)
-
-YELLOW = (0, 220, 255)
-
-RED = (80, 80, 255)
-
-BLUE = (255, 160, 0)
-
-
-# =================================
-# TRACKER
-# =================================
-bg_subtractor = cv2.createBackgroundSubtractorMOG2(
-    history=300,
-    varThreshold=40
-)
-
-
-# =================================
-# HELPERS
-# =================================
-def draw_panel(frame):
-
-    h, w = frame.shape[:2]
-
-    panel_x = w - 320
-
-    overlay = frame.copy()
-
-    cv2.rectangle(
-        overlay,
-        (panel_x, 0),
-        (w, h),
-        BG,
-        -1
-    )
-
-    cv2.addWeighted(
-        overlay,
-        0.92,
-        frame,
-        0.08,
-        0,
-        frame
-    )
-
-    return panel_x
-
-
-def draw_text(
-    img,
-    text,
-    x,
-    y,
-    scale=0.65,
-    color=WHITE,
-    thickness=2
-):
-
-    cv2.putText(
-        img,
-        str(text),
-        (x, y),
-        cv2.FONT_HERSHEY_SIMPLEX,
-        scale,
-        color,
-        thickness
-    )
-
-
-def category_color(cat):
-
-    cat = str(cat).lower()
-
-
-    if (
-        "fresco" in cat
-        or
-        "natural" in cat
-    ):
-        return GREEN
-
-
-    if (
-        "procesado" in cat
-        or
-        "mixto" in cat
-    ):
-        return YELLOW
-
-
-    if (
-        "ultra" in cat
-        or
-        "azucar" in cat
-    ):
-        return RED
-
-
-    return WHITE
-
-
-def predict(img):
-
-    pil = Image.fromarray(
-        img
-    )
+# =========================
+# PREDICT
+# =========================
+def predict(image):
 
     tensor = transform(
-        pil
+        image
     ).unsqueeze(0)
-
 
     with torch.no_grad():
 
-        outputs = model(
+        output = model(
             tensor
         )
 
         probs = torch.softmax(
-            outputs,
+            output,
             dim=1
         )
-
 
     conf, pred = torch.max(
         probs,
         1
     )
 
-
     conf = float(
         conf[0]
     )
-
 
     label = CLASSES[
         pred[0].item()
     ]
 
-
-    label = label.lower().strip()
-
-
     info = FOOD_INFO.get(
         label,
-        {
-            "categoria": "Sin datos",
-            "calorias": "-",
-            "proteina": "-",
-            "grasas": "-",
-            "azucar": "-",
-            "consejo": "-"
-        }
+        {}
     )
-
 
     return label, conf, info
 
 
-# =================================
-# DETECT OBJECT
-# =================================
-def detect_object(frame):
+# =========================
+# VIDEO PROCESSOR
+# =========================
+class FoodProcessor(
+    VideoProcessorBase
+):
 
-    mask = bg_subtractor.apply(
-        frame
-    )
+    def __init__(self):
 
-    _, mask = cv2.threshold(
-        mask,
-        200,
-        255,
-        cv2.THRESH_BINARY
-    )
+        self.frame_counter = 0
 
+        self.freeze = False
 
-    contours, _ = cv2.findContours(
-        mask,
-        cv2.RETR_EXTERNAL,
-        cv2.CHAIN_APPROX_SIMPLE
-    )
+        self.detected = None
+
+        # NUEVO
+        self.last_label = None
+
+        self.same_count = 0
 
 
-    h, w = frame.shape[:2]
+    def recv(self, frame):
 
-    cx_screen = w // 2
-
-    cy_screen = h // 2
-
-
-    best_score = 999999
-
-    best_box = None
-
-
-    for cnt in contours:
-
-        area = cv2.contourArea(
-            cnt
-        )
-
-        if area < 15000:
-            continue
-
-
-        x, y, bw, bh = cv2.boundingRect(
-            cnt
+        img = frame.to_ndarray(
+            format="bgr24"
         )
 
 
-        cx = x + bw // 2
+        # =====================
+        # YA DETECTADO
+        # =====================
+        if self.freeze:
 
-        cy = y + bh // 2
+            label = self.detected["label"]
+            conf = self.detected["conf"]
 
+            cv2.rectangle(
+                img,
+                (20,20),
+                (420,120),
+                (15,18,30),
+                -1
+            )
 
-        dist = (
-            (cx - cx_screen) ** 2
-            +
-            (cy - cy_screen) ** 2
-        )
+            cv2.putText(
+                img,
+                label,
+                (40,65),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                1,
+                (255,255,255),
+                2
+            )
 
+            cv2.putText(
+                img,
+                f"{conf*100:.1f}%",
+                (40,100),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.8,
+                (0,255,0),
+                2
+            )
 
-        if dist < best_score:
-
-            best_score = dist
-
-            best_box = (
-                x,
-                y,
-                bw,
-                bh
+            return av.VideoFrame.from_ndarray(
+                img,
+                format="bgr24"
             )
 
 
-    return best_box
+        self.frame_counter += 1
 
 
-# =================================
-# CAMERA
-# =================================
-cap = cv2.VideoCapture(0)
+        # =====================
+        # INFERENCIA
+        # =====================
+        if self.frame_counter % 8 == 0:
 
-if not cap.isOpened():
+            rgb = cv2.cvtColor(
+                img,
+                cv2.COLOR_BGR2RGB
+            )
 
-    print("No se pudo abrir cámara")
-    exit()
+            pil = Image.fromarray(
+                rgb
+            )
+
+            label, conf, info = predict(
+                pil
+            )
 
 
-cap.set(
-    cv2.CAP_PROP_FRAME_WIDTH,
-    1280
+            # confianza mínima
+            if conf >= 0.90:
+
+
+                # misma clase consecutiva
+                if label == self.last_label:
+
+                    self.same_count += 1
+
+                else:
+
+                    self.last_label = label
+
+                    self.same_count = 1
+
+
+                # congelar tras 3 veces
+                if self.same_count >= 3:
+
+                    self.freeze = True
+
+                    self.detected = {
+
+                        "label": label,
+
+                        "conf": conf,
+
+                        "info": info
+                    }
+
+            else:
+
+                self.same_count = 0
+
+                self.last_label = None
+
+
+        cv2.putText(
+            img,
+            "ESCANEANDO...",
+            (20,50),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (0,255,255),
+            2
+        )
+
+        return av.VideoFrame.from_ndarray(
+            img,
+            format="bgr24"
+        )
+
+
+# =========================
+# UI
+# =========================
+st.title(
+    "🥗 Food Vision AI"
 )
 
-cap.set(
-    cv2.CAP_PROP_FRAME_HEIGHT,
-    720
+
+modo = option_menu(
+    None,
+    ["Cámara", "Galería"],
+    icons=[
+        "camera-fill",
+        "image-fill"
+    ],
+    orientation="horizontal"
 )
 
 
-# =================================
-# STATE
-# =================================
-last_prediction = None
+# =========================
+# CAMARA
+# =========================
+if modo == "Cámara":
 
-freeze = False
+    ctx = webrtc_streamer(
 
-tracked_box = None
+        key="food-ai",
 
-frame_counter = 0
+        video_processor_factory=(
+            FoodProcessor
+        ),
 
-last_time = time.time()
-
-
-print("SPACE = continuar")
-print("Q = salir")
-
-
-# =================================
-# LOOP
-# =================================
-while True:
-
-
-    if not freeze:
-
-        ret, frame = cap.read()
-
-        if not ret:
-            break
-
-        frame = cv2.flip(
-            frame,
-            1
-        )
-
-
-    display = frame.copy()
-
-
-    h, w = display.shape[:2]
-
-
-    panel_x = draw_panel(
-        display
-    )
-
-
-    # FPS
-    now = time.time()
-
-    delta = max(
-        now - last_time,
-        0.0001
-    )
-
-    fps = int(
-        1 / delta
-    )
-
-    last_time = now
-
-
-    # TRACKING
-    if not freeze:
-
-        box = detect_object(
-            display
-        )
-
-        if box is not None:
-            tracked_box = box
-
-
-    # BOX
-    if tracked_box is not None:
-
-        x, y, bw, bh = tracked_box
-
-
-        cv2.rectangle(
-            display,
-            (x, y),
-            (x + bw, y + bh),
-            BLUE,
-            3
-        )
-
-
-        if not freeze:
-
-            frame_counter += 1
-
-
-            if frame_counter % 8 == 0:
-
-                roi = display[
-                    y:y+bh,
-                    x:x+bw
+        rtc_configuration=RTCConfiguration(
+            {
+                "iceServers": [
+                    {
+                        "urls": [
+                            "stun:stun.l.google.com:19302"
+                        ]
+                    }
                 ]
+            }
+        ),
+
+        media_stream_constraints={
+            "video": True,
+            "audio": False
+        }
+    )
 
 
-                if roi.size > 0:
+    result_box = st.empty()
 
-                    label, conf, info = predict(
 
-                        cv2.cvtColor(
-                            roi,
-                            cv2.COLOR_BGR2RGB
-                        )
+    if ctx.state.playing:
+
+        while True:
+
+            if (
+                ctx.video_processor
+                and ctx.video_processor.detected
+            ):
+
+                data = (
+                    ctx.video_processor
+                    .detected
+                )
+
+                info = data["info"]
+
+
+                with result_box.container():
+
+                    st.success(
+                        f"{data['label']} "
+                        f"({data['conf']*100:.1f}%)"
                     )
 
 
-                    if conf > 0.75:
+                    categoria = info.get(
+                        "categoria",
+                        "-"
+                    )
 
-                        freeze = True
-
-
-                        last_prediction = {
-
-                            "label": label,
-
-                            "conf": conf,
-
-                            "info": info
-                        }
+                    color = info.get(
+                        "color",
+                        "#999"
+                    )
 
 
-    # =================================
-    # UI
-    # =================================
-    draw_text(
-        display,
-        "FOOD VISION AI",
-        panel_x + 20,
-        50,
-        0.9
-    )
+                    st.markdown(f"""
+                    <div style="
+                    background:{color};
+                    color:white;
+                    padding:10px;
+                    border-radius:12px;
+                    font-weight:bold;
+                    text-align:center;
+                    margin-bottom:20px;
+                    ">
+                    {categoria}
+                    </div>
+                    """,
+                    unsafe_allow_html=True)
 
 
-    draw_text(
-        display,
-        f"FPS: {fps}",
-        panel_x + 20,
-        90
-    )
+                    c1, c2 = st.columns(2)
 
 
-    if freeze:
+                    with c1:
 
-        draw_text(
-            display,
-            "DETECTADO",
-            panel_x + 20,
-            130,
-            color=GREEN
-        )
+                        st.metric(
+                            "Calorías",
+                            info.get(
+                                "calorias",
+                                "-"
+                            )
+                        )
 
-    else:
-
-        draw_text(
-            display,
-            "ESCANEANDO...",
-            panel_x + 20,
-            130,
-            color=YELLOW
-        )
+                        st.metric(
+                            "Proteína",
+                            info.get(
+                                "proteina",
+                                "-"
+                            )
+                        )
 
 
-    # =================================
-    # RESULTADOS
-    # =================================
-    if last_prediction:
+                    with c2:
 
-        info = last_prediction[
-            "info"
+                        st.metric(
+                            "Grasas",
+                            info.get(
+                                "grasas",
+                                "-"
+                            )
+                        )
+
+                        st.metric(
+                            "Azúcar",
+                            info.get(
+                                "azucar",
+                                "-"
+                            )
+                        )
+
+
+                    st.info(
+                        info.get(
+                            "consejo",
+                            "-"
+                        )
+                    )
+
+                break
+
+
+            time.sleep(
+                0.2
+            )
+
+
+# =========================
+# GALERIA
+# =========================
+else:
+
+    img_file = st.file_uploader(
+        "Selecciona imagen",
+        type=[
+            "jpg",
+            "png",
+            "jpeg"
         ]
-
-
-        cat = info.get(
-            "categoria",
-            "?"
-        )
-
-
-        c = category_color(
-            cat
-        )
-
-
-        draw_text(
-            display,
-
-            last_prediction[
-                "label"
-            ].replace(
-                "_",
-                " "
-            ).title(),
-
-            panel_x + 20,
-            230
-        )
-
-
-        draw_text(
-            display,
-
-            f"{last_prediction['conf']*100:.1f}%",
-
-            panel_x + 20,
-            270
-        )
-
-
-        draw_text(
-            display,
-
-            f"Categoria: {cat}",
-
-            panel_x + 20,
-            320,
-
-            color=c
-        )
-
-
-        draw_text(
-            display,
-
-            f"Kcal: {info['calorias']}",
-
-            panel_x + 20,
-            380
-        )
-
-
-        draw_text(
-            display,
-
-            f"Prot: {info['proteina']}",
-
-            panel_x + 20,
-            420
-        )
-
-
-        draw_text(
-            display,
-
-            f"Grasas: {info['grasas']}",
-
-            panel_x + 20,
-            460
-        )
-
-
-        draw_text(
-            display,
-
-            f"Azucar: {info['azucar']}",
-
-            panel_x + 20,
-            500
-        )
-
-
-        consejo = info[
-            "consejo"
-        ][:38]
-
-
-        draw_text(
-            display,
-
-            consejo,
-
-            panel_x + 20,
-            560,
-
-            scale=0.45
-        )
-
-
-    cv2.imshow(
-        "Food Vision AI",
-        display
     )
 
+    if img_file:
 
-    key = cv2.waitKey(1) & 0xFF
+        image = Image.open(
+            img_file
+        ).convert("RGB")
 
+        label, conf, info = predict(
+            image
+        )
 
-    if key == ord("q"):
-        break
+        st.success(
+            f"{label} "
+            f"({conf*100:.1f}%)"
+        )
 
-
-    if key == 32:
-
-        freeze = False
-
-        last_prediction = None
-
-
-cap.release()
-
-cv2.destroyAllWindows()
+        st.write(
+            info
+        )
