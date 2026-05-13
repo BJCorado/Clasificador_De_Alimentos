@@ -4,6 +4,7 @@ import torch.nn as nn
 import av
 import cv2
 import json
+import time
 
 from PIL import Image
 from torchvision import transforms
@@ -25,13 +26,6 @@ st.set_page_config(
     page_icon="🥗",
     layout="wide"
 )
-
-
-# =========================
-# SESSION
-# =========================
-if "camera_key" not in st.session_state:
-    st.session_state.camera_key = 0
 
 
 # =========================
@@ -82,11 +76,11 @@ model = load_model()
 # TRANSFORM
 # =========================
 transform = transforms.Compose([
-    transforms.Resize((224, 224)),
+    transforms.Resize((224,224)),
     transforms.ToTensor(),
     transforms.Normalize(
-        [0.485, 0.456, 0.406],
-        [0.229, 0.224, 0.225]
+        [0.485,0.456,0.406],
+        [0.229,0.224,0.225]
     )
 ])
 
@@ -133,91 +127,6 @@ def predict(image):
 
 
 # =========================
-# CARD UI
-# =========================
-def show_food_card(
-    label,
-    conf,
-    info
-):
-
-    st.success(
-        f"{label} ({conf*100:.1f}%)"
-    )
-
-    categoria = info.get(
-        "categoria",
-        "-"
-    )
-
-    color = info.get(
-        "color",
-        "#999999"
-    )
-
-    st.markdown(f"""
-    <div style="
-        background:{color};
-        color:white;
-        padding:12px;
-        border-radius:12px;
-        text-align:center;
-        font-weight:bold;
-        font-size:18px;
-        margin-bottom:20px;
-    ">
-        {categoria}
-    </div>
-    """,
-    unsafe_allow_html=True)
-
-    c1, c2 = st.columns(2)
-
-    with c1:
-
-        st.metric(
-            "Calorías",
-            info.get(
-                "calorias",
-                "-"
-            )
-        )
-
-        st.metric(
-            "Proteína",
-            info.get(
-                "proteina",
-                "-"
-            )
-        )
-
-    with c2:
-
-        st.metric(
-            "Grasas",
-            info.get(
-                "grasas",
-                "-"
-            )
-        )
-
-        st.metric(
-            "Azúcar",
-            info.get(
-                "azucar",
-                "-"
-            )
-        )
-
-    st.info(
-        info.get(
-            "consejo",
-            "-"
-        )
-    )
-
-
-# =========================
 # VIDEO PROCESSOR
 # =========================
 class FoodProcessor(
@@ -232,15 +141,13 @@ class FoodProcessor(
 
         self.detected = None
 
+        # NUEVO
         self.last_label = None
 
         self.same_count = 0
 
 
-    def recv(
-        self,
-        frame
-    ):
+    def recv(self, frame):
 
         img = frame.to_ndarray(
             format="bgr24"
@@ -252,13 +159,34 @@ class FoodProcessor(
         # =====================
         if self.freeze:
 
+            label = self.detected["label"]
+            conf = self.detected["conf"]
+
+            cv2.rectangle(
+                img,
+                (20,20),
+                (420,120),
+                (15,18,30),
+                -1
+            )
+
             cv2.putText(
                 img,
-                self.detected["label"],
-                (20, 50),
+                label,
+                (40,65),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 1,
-                (0, 255, 0),
+                (255,255,255),
+                2
+            )
+
+            cv2.putText(
+                img,
+                f"{conf*100:.1f}%",
+                (40,100),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.8,
+                (0,255,0),
                 2
             )
 
@@ -290,8 +218,11 @@ class FoodProcessor(
             )
 
 
+            # confianza mínima
             if conf >= 0.90:
 
+
+                # misma clase consecutiva
                 if label == self.last_label:
 
                     self.same_count += 1
@@ -303,6 +234,7 @@ class FoodProcessor(
                     self.same_count = 1
 
 
+                # congelar tras 3 veces
                 if self.same_count >= 3:
 
                     self.freeze = True
@@ -326,10 +258,10 @@ class FoodProcessor(
         cv2.putText(
             img,
             "ESCANEANDO...",
-            (20, 50),
+            (20,50),
             cv2.FONT_HERSHEY_SIMPLEX,
             1,
-            (0, 255, 255),
+            (0,255,255),
             2
         )
 
@@ -365,7 +297,7 @@ if modo == "Cámara":
 
     ctx = webrtc_streamer(
 
-        key=f"food-ai-{st.session_state.camera_key}",
+        key="food-ai",
 
         video_processor_factory=(
             FoodProcessor
@@ -390,35 +322,115 @@ if modo == "Cámara":
     )
 
 
-    if (
-        ctx.video_processor
-        and
-        ctx.video_processor.detected
-    ):
-
-        data = (
-            ctx.video_processor
-            .detected
-        )
-
-        show_food_card(
-
-            data["label"],
-
-            data["conf"],
-
-            data["info"]
-        )
+    result_box = st.empty()
 
 
-        if st.button(
-            "🔄 Nueva detección",
-            use_container_width=True
-        ):
+    if ctx.state.playing:
 
-            st.session_state.camera_key += 1
+        while True:
 
-            st.rerun()
+            if (
+                ctx.video_processor
+                and ctx.video_processor.detected
+            ):
+
+                data = (
+                    ctx.video_processor
+                    .detected
+                )
+
+                info = data["info"]
+
+
+                with result_box.container():
+
+                    st.success(
+                        f"{data['label']} "
+                        f"({data['conf']*100:.1f}%)"
+                    )
+
+
+                    categoria = info.get(
+                        "categoria",
+                        "-"
+                    )
+
+                    color = info.get(
+                        "color",
+                        "#999"
+                    )
+
+
+                    st.markdown(f"""
+                    <div style="
+                    background:{color};
+                    color:white;
+                    padding:10px;
+                    border-radius:12px;
+                    font-weight:bold;
+                    text-align:center;
+                    margin-bottom:20px;
+                    ">
+                    {categoria}
+                    </div>
+                    """,
+                    unsafe_allow_html=True)
+
+
+                    c1, c2 = st.columns(2)
+
+
+                    with c1:
+
+                        st.metric(
+                            "Calorías",
+                            info.get(
+                                "calorias",
+                                "-"
+                            )
+                        )
+
+                        st.metric(
+                            "Proteína",
+                            info.get(
+                                "proteina",
+                                "-"
+                            )
+                        )
+
+
+                    with c2:
+
+                        st.metric(
+                            "Grasas",
+                            info.get(
+                                "grasas",
+                                "-"
+                            )
+                        )
+
+                        st.metric(
+                            "Azúcar",
+                            info.get(
+                                "azucar",
+                                "-"
+                            )
+                        )
+
+
+                    st.info(
+                        info.get(
+                            "consejo",
+                            "-"
+                        )
+                    )
+
+                break
+
+
+            time.sleep(
+                0.2
+            )
 
 
 # =========================
@@ -427,16 +439,13 @@ if modo == "Cámara":
 else:
 
     img_file = st.file_uploader(
-
         "Selecciona imagen",
-
         type=[
             "jpg",
             "png",
             "jpeg"
         ]
     )
-
 
     if img_file:
 
@@ -456,11 +465,86 @@ else:
         )
 
 
-        show_food_card(
+        # ===========
+        # RESULTADO
+        # ===========
+        st.success(
+            f"{label} "
+            f"({conf*100:.1f}%)"
+        )
 
-            label,
 
-            conf,
+        categoria = info.get(
+            "categoria",
+            "-"
+        )
 
-            info
+        color = info.get(
+            "color",
+            "#999"
+        )
+
+
+        st.markdown(f"""
+        <div style="
+        background:{color};
+        color:white;
+        padding:10px;
+        border-radius:12px;
+        font-weight:bold;
+        text-align:center;
+        margin-bottom:20px;
+        ">
+        {categoria}
+        </div>
+        """,
+        unsafe_allow_html=True)
+
+
+        c1, c2 = st.columns(2)
+
+
+        with c1:
+
+            st.metric(
+                "Calorías",
+                info.get(
+                    "calorias",
+                    "-"
+                )
+            )
+
+            st.metric(
+                "Proteína",
+                info.get(
+                    "proteina",
+                    "-"
+                )
+            )
+
+
+        with c2:
+
+            st.metric(
+                "Grasas",
+                info.get(
+                    "grasas",
+                    "-"
+                )
+            )
+
+            st.metric(
+                "Azúcar",
+                info.get(
+                    "azucar",
+                    "-"
+                )
+            )
+
+
+        st.info(
+            info.get(
+                "consejo",
+                "-"
+            )
         )
