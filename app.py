@@ -5,6 +5,7 @@ import av
 import cv2
 import json
 import time
+import numpy as np
 
 from PIL import Image
 from torchvision import transforms
@@ -76,11 +77,11 @@ model = load_model()
 # TRANSFORM
 # =========================
 transform = transforms.Compose([
-    transforms.Resize((224,224)),
+    transforms.Resize((224, 224)),
     transforms.ToTensor(),
     transforms.Normalize(
-        [0.485,0.456,0.406],
-        [0.229,0.224,0.225]
+        [0.485, 0.456, 0.406],
+        [0.229, 0.224, 0.225]
     )
 ])
 
@@ -127,6 +128,109 @@ def predict(image):
 
 
 # =========================
+# OBJECT ROI
+# =========================
+def get_food_roi(frame):
+
+    hsv = cv2.cvtColor(
+        frame,
+        cv2.COLOR_BGR2HSV
+    )
+
+
+    # zonas con color real
+    mask = cv2.inRange(
+        hsv,
+        (0, 40, 40),
+        (180, 255, 255)
+    )
+
+
+    kernel = np.ones(
+        (5, 5),
+        np.uint8
+    )
+
+
+    mask = cv2.morphologyEx(
+        mask,
+        cv2.MORPH_CLOSE,
+        kernel
+    )
+
+
+    contours, _ = cv2.findContours(
+        mask,
+        cv2.RETR_EXTERNAL,
+        cv2.CHAIN_APPROX_SIMPLE
+    )
+
+
+    if contours:
+
+        contours = sorted(
+            contours,
+            key=cv2.contourArea,
+            reverse=True
+        )
+
+
+        for contour in contours:
+
+            area = cv2.contourArea(
+                contour
+            )
+
+
+            if area < 2000:
+                continue
+
+
+            x, y, w, h = cv2.boundingRect(
+                contour
+            )
+
+
+            roi = frame[
+                y:y+h,
+                x:x+w
+            ]
+
+
+            return roi, (
+                x,
+                y,
+                x+w,
+                y+h
+            )
+
+
+    # fallback: centro de cámara
+    h, w = frame.shape[:2]
+
+    size = 250
+
+    x1 = (w // 2) - (size // 2)
+    y1 = (h // 2) - (size // 2)
+
+    x2 = x1 + size
+    y2 = y1 + size
+
+
+    roi = frame[
+        y1:y2,
+        x1:x2
+    ]
+
+
+    return roi, (
+        x1,
+        y1,
+        x2,
+        y2
+    )
+
+# =========================
 # VIDEO PROCESSOR
 # =========================
 class FoodProcessor(
@@ -141,10 +245,11 @@ class FoodProcessor(
 
         self.detected = None
 
-        # NUEVO
         self.last_label = None
 
         self.same_count = 0
+
+        self.frozen_frame = None
 
 
     def recv(self, frame):
@@ -155,43 +260,17 @@ class FoodProcessor(
 
 
         # =====================
-        # YA DETECTADO
+        # FRAME CONGELADO
         # =====================
         if self.freeze:
 
-            label = self.detected["label"]
-            conf = self.detected["conf"]
-
-            cv2.rectangle(
-                img,
-                (20,20),
-                (420,120),
-                (15,18,30),
-                -1
-            )
-
-            cv2.putText(
-                img,
-                label,
-                (40,65),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                1,
-                (255,255,255),
-                2
-            )
-
-            cv2.putText(
-                img,
-                f"{conf*100:.1f}%",
-                (40,100),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.8,
-                (0,255,0),
-                2
+            frozen = (
+                self.frozen_frame
+                .copy()
             )
 
             return av.VideoFrame.from_ndarray(
-                img,
+                frozen,
                 format="bgr24"
             )
 
@@ -200,70 +279,105 @@ class FoodProcessor(
 
 
         # =====================
-        # INFERENCIA
+        # DETECCION
         # =====================
         if self.frame_counter % 8 == 0:
 
-            rgb = cv2.cvtColor(
-                img,
-                cv2.COLOR_BGR2RGB
-            )
-
-            pil = Image.fromarray(
-                rgb
-            )
-
-            label, conf, info = predict(
-                pil
+            roi_data = get_food_roi(
+                img
             )
 
 
-            # confianza mínima
-            if conf >= 0.90:
+            if roi_data:
+
+                roi, box = roi_data
+
+                x1, y1, x2, y2 = box
 
 
-                # misma clase consecutiva
-                if label == self.last_label:
+                cv2.rectangle(
+                    img,
+                    (x1, y1),
+                    (x2, y2),
+                    (0, 255, 0),
+                    2
+                )
 
-                    self.same_count += 1
+
+                rgb = cv2.cvtColor(
+                    roi,
+                    cv2.COLOR_BGR2RGB
+                )
+
+                pil = Image.fromarray(
+                    rgb
+                )
+
+
+                label, conf, info = predict(
+                    pil
+                )
+
+
+                if conf >= 0.90:
+
+                    if label == self.last_label:
+
+                        self.same_count += 1
+
+                    else:
+
+                        self.last_label = label
+
+                        self.same_count = 1
+
+
+                    if self.same_count >= 3:
+
+                        self.freeze = True
+
+                        cv2.putText(
+                            img,
+                            label,
+                            (x1, y1 - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX,
+                            0.8,
+                            (0, 255, 0),
+                            2
+                        )
+
+                        self.frozen_frame = (
+                            img.copy()
+                        )
+
+                        self.detected = {
+
+                            "label": label,
+
+                            "conf": conf,
+
+                            "info": info,
+
+                            "box": box
+                        }
 
                 else:
 
-                    self.last_label = label
+                    self.same_count = 0
 
-                    self.same_count = 1
-
-
-                # congelar tras 3 veces
-                if self.same_count >= 3:
-
-                    self.freeze = True
-
-                    self.detected = {
-
-                        "label": label,
-
-                        "conf": conf,
-
-                        "info": info
-                    }
-
-            else:
-
-                self.same_count = 0
-
-                self.last_label = None
+                    self.last_label = None
 
 
         cv2.putText(
             img,
             "ESCANEANDO...",
-            (20,50),
+            (20, 40),
             cv2.FONT_HERSHEY_SIMPLEX,
             1,
-            (0,255,255),
+            (0, 255, 255),
             2
         )
+
 
         return av.VideoFrame.from_ndarray(
             img,
@@ -331,7 +445,8 @@ if modo == "Cámara":
 
             if (
                 ctx.video_processor
-                and ctx.video_processor.detected
+                and
+                ctx.video_processor.detected
             ):
 
                 data = (
@@ -465,9 +580,6 @@ else:
         )
 
 
-        # ===========
-        # RESULTADO
-        # ===========
         st.success(
             f"{label} "
             f"({conf*100:.1f}%)"
