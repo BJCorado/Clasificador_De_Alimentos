@@ -103,6 +103,33 @@ with open(
 ) as f:
     FOOD_INFO = json.load(f)
 
+# =========================
+# LABELS EN ESPAÑOL
+# =========================
+SPANISH_NAMES = {
+
+    "apple": "Manzana",
+    "banana": "Banana",
+    "ceviche": "Ceviche",
+    "chicken_wings": "Alitas de pollo",
+    "coca_cola": "Coca Cola",
+    "coffee": "Café",
+    "french_fries": "Papas fritas",
+    "fried_rice": "Arroz frito",
+    "hamburger": "Hamburguesa",
+    "ice_cream": "Helado",
+    "lemon": "Limón",
+    "mango": "Mango",
+    "monster_energy": "Monster Energy",
+    "nachos": "Nachos",
+    "pizza": "Pizza",
+    "ramen": "Ramen",
+    "spaghetti_bolognese": "Espagueti boloñesa",
+    "steak": "Bistec",
+    "tacos": "Tacos",
+    "water_bottle": "Botella de agua",
+    "watermelon": "Sandía"
+}
 
 # =========================
 # MODEL
@@ -670,11 +697,16 @@ if modo == "Cámara":
 
                     info = data["info"]
 
+                    label_es = SPANISH_NAMES.get(
+                        data["label"],
+                        data["label"]
+                    )
+
 
                     with result_box.container():
 
                         st.success(
-                            f"{data['label']} "
+                            f"{label_es} "
                             f"({data['conf']*100:.1f}%)"
                         )
 
@@ -793,6 +825,12 @@ else:
         )
 
 
+        label_es = SPANISH_NAMES.get(
+            label,
+            label
+        )
+
+
         img_col, info_col = st.columns(
             [1, 1.15]
         )
@@ -815,7 +853,7 @@ else:
         with info_col:
 
             st.success(
-                f"{label} "
+                f"{label_es} "
                 f"({conf*100:.1f}%)"
             )
 
