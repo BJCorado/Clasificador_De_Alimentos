@@ -194,13 +194,15 @@ def predict(image):
 # =========================
 def get_food_roi(frame):
 
+    frame_h, frame_w = frame.shape[:2]
+
     hsv = cv2.cvtColor(
         frame,
         cv2.COLOR_BGR2HSV
     )
 
 
-    # zonas con color real
+    # detectar zonas con color real
     mask = cv2.inRange(
         hsv,
         (0, 40, 40),
@@ -209,7 +211,7 @@ def get_food_roi(frame):
 
 
     kernel = np.ones(
-        (5, 5),
+        (9, 9),
         np.uint8
     )
 
@@ -230,9 +232,37 @@ def get_food_roi(frame):
 
     if contours:
 
+        cx_frame = frame_w // 2
+        cy_frame = frame_h // 2
+
+
+        # prioridad:
+        # grande + cerca del centro
+        def score(contour):
+
+            x, y, w, h = cv2.boundingRect(
+                contour
+            )
+
+            cx = x + w // 2
+            cy = y + h // 2
+
+            dist = abs(
+                cx - cx_frame
+            ) + abs(
+                cy - cy_frame
+            )
+
+            area = cv2.contourArea(
+                contour
+            )
+
+            return area - dist * 5
+
+
         contours = sorted(
             contours,
-            key=cv2.contourArea,
+            key=score,
             reverse=True
         )
 
@@ -243,13 +273,91 @@ def get_food_roi(frame):
                 contour
             )
 
+            frame_area = (
+                frame_h * frame_w
+            )
 
-            if area < 2000:
+
+            # muy pequeño
+            if area < 4000:
+                continue
+
+
+            # muy grande
+            if area > frame_area * 0.35:
                 continue
 
 
             x, y, w, h = cv2.boundingRect(
                 contour
+            )
+
+
+            # ====================
+            # NUEVO: ignorar bordes
+            # ====================
+            border = 40
+
+            if (
+                x < border
+                or y < border
+                or x + w > frame_w - border
+                or y + h > frame_h - border
+            ):
+                continue
+
+
+            # ====================
+            # NUEVO: forma lógica
+            # ====================
+            ratio = w / h
+
+            if (
+                ratio < 0.3
+                or ratio > 2.0
+            ):
+                continue
+
+
+            # ====================
+            # NUEVO: cerca centro
+            # ====================
+            cx = x + w // 2
+            cy = y + h // 2
+
+            dist = abs(
+                cx - cx_frame
+            ) + abs(
+                cy - cy_frame
+            )
+
+            if dist > 250:
+                continue
+
+
+            # ====================
+            # apretar bounding box
+            # ====================
+            margin = 12
+
+            x = max(
+                0,
+                x + margin
+            )
+
+            y = max(
+                0,
+                y + margin
+            )
+
+            w = max(
+                50,
+                w - margin * 2
+            )
+
+            h = max(
+                50,
+                h - margin * 2
             )
 
 
@@ -259,21 +367,41 @@ def get_food_roi(frame):
             ]
 
 
+            # ====================
+            # NUEVO: evitar sombras
+            # ====================
+            mean_color = np.mean(
+                roi
+            )
+
+            if mean_color < 50:
+                continue
+
+
             return roi, (
                 x,
                 y,
-                x+w,
-                y+h
+                x + w,
+                y + h
             )
 
 
-    # fallback: centro de cámara
-    h, w = frame.shape[:2]
-
+    # ====================
+    # fallback: centro
+    # ====================
     size = 250
 
-    x1 = (w // 2) - (size // 2)
-    y1 = (h // 2) - (size // 2)
+    x1 = (
+        frame_w // 2
+    ) - (
+        size // 2
+    )
+
+    y1 = (
+        frame_h // 2
+    ) - (
+        size // 2
+    )
 
     x2 = x1 + size
     y2 = y1 + size
@@ -291,7 +419,6 @@ def get_food_roi(frame):
         x2,
         y2
     )
-
 # =========================
 # VIDEO PROCESSOR
 # =========================
