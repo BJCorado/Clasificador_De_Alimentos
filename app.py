@@ -23,7 +23,7 @@ from streamlit_webrtc import (
 # CONFIG
 # =========================
 st.set_page_config(
-    page_title="Food Vision AI",
+    page_title="Clasificador De Alimentos y Nutrición Orientativa",
     page_icon="🥗",
     layout="wide"
 )
@@ -31,6 +31,65 @@ st.set_page_config(
 if "camera_id" not in st.session_state:
 
     st.session_state.camera_id = 0
+
+# =========================
+# CSS para mejorar apariencia
+# =========================
+st.markdown("""
+<style>
+
+/* padding general */
+.block-container{
+    padding-top:1.8rem !important;
+    padding-bottom:0rem !important;
+}
+
+/* video */
+video{
+    max-height:340px !important;
+    width:100% !important;
+    border-radius:12px;
+    object-fit:cover;
+}
+
+/* espacio entre elementos */
+[data-testid="stVerticalBlock"]{
+    gap:0.2rem !important;
+}
+
+/* metrics más compactas */
+div[data-testid="stMetric"]{
+    padding:4px !important;
+    margin:0px !important;
+    border-radius:10px;
+}
+
+/* textos de metric */
+div[data-testid="stMetricLabel"]{
+    font-size:0.8rem !important;
+}
+
+div[data-testid="stMetricValue"]{
+    font-size:1rem !important;
+}
+
+/* botón */
+.stButton button{
+    padding:0.4rem !important;
+}
+
+/* success box */
+.stAlert{
+    padding:0.4rem !important;
+}
+
+/* expander */
+.streamlit-expanderHeader{
+    font-size:0.9rem !important;
+}
+
+</style>
+""", unsafe_allow_html=True)
 
 # =========================
 # DATA
@@ -392,7 +451,7 @@ class FoodProcessor(
 # UI
 # =========================
 st.title(
-    "🥗 Food Vision AI"
+    "🥗 Clasificador De Alimentos y Nutrición Orientativa"
 )
 
 
@@ -412,152 +471,172 @@ modo = option_menu(
 # =========================
 if modo == "Cámara":
 
-    ctx = webrtc_streamer(
-
-        key=f"food-ai-{st.session_state.camera_id}",
-
-        video_processor_factory=(
-            FoodProcessor
-        ),
-
-        rtc_configuration=RTCConfiguration(
-            {
-                "iceServers": [
-                    {
-                        "urls": [
-                            "stun:stun.l.google.com:19302"
-                        ]
-                    }
-                ]
-            }
-        ),
-
-        media_stream_constraints={
-            "video": True,
-            "audio": False
-        }
+    cam_col, info_col = st.columns(
+        [1, 1.15]
     )
 
 
-    result_box = st.empty()
+    # =====================
+    # COLUMNA CAMARA
+    # =====================
+    with cam_col:
+
+        ctx = webrtc_streamer(
+
+            key=f"food-ai-{st.session_state.camera_id}",
+
+            video_processor_factory=(
+                FoodProcessor
+            ),
+
+            rtc_configuration=RTCConfiguration(
+                {
+                    "iceServers": [
+                        {
+                            "urls": [
+                                "stun:stun.l.google.com:19302"
+                            ]
+                        }
+                    ]
+                }
+            ),
+
+            media_stream_constraints={
+                "video": True,
+                "audio": False
+            }
+        )
 
 
-    if ctx.state.playing:
+    # =====================
+    # COLUMNA INFO
+    # =====================
+    with info_col:
 
-        while True:
+        result_box = st.empty()
 
-            if (
-                ctx.video_processor
-                and
-                ctx.video_processor.detected
-            ):
 
-                data = (
+        if st.button(
+            "🔄 Nueva detección",
+            use_container_width=True
+        ):
+
+            st.session_state.camera_id += 1
+
+            st.rerun()
+
+
+        if ctx.state.playing:
+
+            while True:
+
+                if (
                     ctx.video_processor
-                    .detected
-                )
+                    and
+                    ctx.video_processor.detected
+                ):
 
-                info = data["info"]
-
-
-                with result_box.container():
-
-                    st.success(
-                        f"{data['label']} "
-                        f"({data['conf']*100:.1f}%)"
+                    data = (
+                        ctx.video_processor
+                        .detected
                     )
 
-
-                    categoria = info.get(
-                        "categoria",
-                        "-"
-                    )
-
-                    color = info.get(
-                        "color",
-                        "#999"
-                    )
+                    info = data["info"]
 
 
-                    st.markdown(f"""
-                    <div style="
-                    background:{color};
-                    color:white;
-                    padding:10px;
-                    border-radius:12px;
-                    font-weight:bold;
-                    text-align:center;
-                    margin-bottom:20px;
-                    ">
-                    {categoria}
-                    </div>
-                    """,
-                    unsafe_allow_html=True)
+                    with result_box.container():
 
-
-                    c1, c2 = st.columns(2)
-
-
-                    with c1:
-
-                        st.metric(
-                            "Calorías",
-                            info.get(
-                                "calorias",
-                                "-"
-                            )
-                        )
-
-                        st.metric(
-                            "Proteína",
-                            info.get(
-                                "proteina",
-                                "-"
-                            )
+                        st.success(
+                            f"{data['label']} "
+                            f"({data['conf']*100:.1f}%)"
                         )
 
 
-                    with c2:
-
-                        st.metric(
-                            "Grasas",
-                            info.get(
-                                "grasas",
-                                "-"
-                            )
-                        )
-
-                        st.metric(
-                            "Azúcar",
-                            info.get(
-                                "azucar",
-                                "-"
-                            )
-                        )
-
-
-                    st.info(
-                        info.get(
-                            "consejo",
+                        categoria = info.get(
+                            "categoria",
                             "-"
                         )
-                    )
 
-                    if st.button(
-                   "🔄 Nueva detección",
-                    use_container_width=True
-                    ):
-
-                      st.session_state.camera_id += 1
-
-                      st.rerun()
-
-                break
+                        color = info.get(
+                            "color",
+                            "#999"
+                        )
 
 
-            time.sleep(
-                0.2
-            )
+                        st.markdown(f"""
+                        <div style="
+                        background:{color};
+                        color:white;
+                        padding:10px;
+                        border-radius:12px;
+                        font-weight:bold;
+                        text-align:center;
+                        margin-bottom:10px;
+                        ">
+                        {categoria}
+                        </div>
+                        """,
+                        unsafe_allow_html=True)
+
+
+                        c1, c2 = st.columns(2)
+
+
+                        with c1:
+
+                            st.metric(
+                                "🔥 Calorías",
+                                info.get(
+                                    "calorias",
+                                    "-"
+                                )
+                            )
+
+                            st.metric(
+                                "💪 Proteína",
+                                info.get(
+                                    "proteina",
+                                    "-"
+                                )
+                            )
+
+
+                        with c2:
+
+                            st.metric(
+                                "🥑 Grasas",
+                                info.get(
+                                    "grasas",
+                                    "-"
+                                )
+                            )
+
+                            st.metric(
+                                "🍬 Azúcar",
+                                info.get(
+                                    "azucar",
+                                    "-"
+                                )
+                            )
+
+
+                        with st.expander(
+                            "💡 Consejo nutricional"
+                        ):
+
+                            st.write(
+                                info.get(
+                                    "consejo",
+                                    "-"
+                                )
+                            )
+
+                    break
+
+
+                time.sleep(
+                    0.2
+                )
 
 
 # =========================
@@ -574,6 +653,7 @@ else:
         ]
     )
 
+
     if img_file:
 
         image = Image.open(
@@ -581,94 +661,113 @@ else:
         ).convert("RGB")
 
 
-        st.image(
-            image,
-            use_container_width=True
-        )
-
-
         label, conf, info = predict(
             image
         )
 
 
-        st.success(
-            f"{label} "
-            f"({conf*100:.1f}%)"
+        img_col, info_col = st.columns(
+            [1, 1.15]
         )
 
 
-        categoria = info.get(
-            "categoria",
-            "-"
-        )
+        # =====================
+        # IMAGEN
+        # =====================
+        with img_col:
 
-        color = info.get(
-            "color",
-            "#999"
-        )
-
-
-        st.markdown(f"""
-        <div style="
-        background:{color};
-        color:white;
-        padding:10px;
-        border-radius:12px;
-        font-weight:bold;
-        text-align:center;
-        margin-bottom:20px;
-        ">
-        {categoria}
-        </div>
-        """,
-        unsafe_allow_html=True)
-
-
-        c1, c2 = st.columns(2)
-
-
-        with c1:
-
-            st.metric(
-                "Calorías",
-                info.get(
-                    "calorias",
-                    "-"
-                )
-            )
-
-            st.metric(
-                "Proteína",
-                info.get(
-                    "proteina",
-                    "-"
-                )
+            st.image(
+                image,
+                use_container_width=True
             )
 
 
-        with c2:
+        # =====================
+        # INFO
+        # =====================
+        with info_col:
 
-            st.metric(
-                "Grasas",
-                info.get(
-                    "grasas",
-                    "-"
-                )
-            )
-
-            st.metric(
-                "Azúcar",
-                info.get(
-                    "azucar",
-                    "-"
-                )
+            st.success(
+                f"{label} "
+                f"({conf*100:.1f}%)"
             )
 
 
-        st.info(
-            info.get(
-                "consejo",
+            categoria = info.get(
+                "categoria",
                 "-"
             )
-        )
+
+            color = info.get(
+                "color",
+                "#999"
+            )
+
+
+            st.markdown(f"""
+            <div style="
+            background:{color};
+            color:white;
+            padding:10px;
+            border-radius:12px;
+            font-weight:bold;
+            text-align:center;
+            margin-bottom:10px;
+            ">
+            {categoria}
+            </div>
+            """,
+            unsafe_allow_html=True)
+
+
+            c1, c2 = st.columns(2)
+
+
+            with c1:
+
+                st.metric(
+                    "🔥 Calorías",
+                    info.get(
+                        "calorias",
+                        "-"
+                    )
+                )
+
+                st.metric(
+                    "💪 Proteína",
+                    info.get(
+                        "proteina",
+                        "-"
+                    )
+                )
+
+
+            with c2:
+
+                st.metric(
+                    "🥑 Grasas",
+                    info.get(
+                        "grasas",
+                        "-"
+                    )
+                )
+
+                st.metric(
+                    "🍬 Azúcar",
+                    info.get(
+                        "azucar",
+                        "-"
+                    )
+                )
+
+
+            with st.expander(
+                "💡 Consejo nutricional"
+            ):
+
+                st.write(
+                    info.get(
+                        "consejo",
+                        "-"
+                    )
+                )
