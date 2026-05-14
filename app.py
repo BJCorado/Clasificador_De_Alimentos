@@ -28,6 +28,9 @@ st.set_page_config(
     layout="wide"
 )
 
+if "camera_id" not in st.session_state:
+
+    st.session_state.camera_id = 0
 
 # =========================
 # DATA
@@ -411,7 +414,7 @@ if modo == "Cámara":
 
     ctx = webrtc_streamer(
 
-        key="food-ai",
+        key=f"food-ai-{st.session_state.camera_id}",
 
         video_processor_factory=(
             FoodProcessor
@@ -539,6 +542,15 @@ if modo == "Cámara":
                             "-"
                         )
                     )
+
+                    if st.button(
+                   "🔄 Nueva detección",
+                    use_container_width=True
+                    ):
+
+                      st.session_state.camera_id += 1
+
+                      st.rerun()
 
                 break
 
