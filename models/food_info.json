@@ -2,19 +2,19 @@
   "apple": {
     "categoria": "Fresco",
     "color": "#2ECC71",
-    "calorias": "52 kcal / 100g",
-    "proteina": "0.3 g",
-    "grasas": "0.2 g",
-    "azucar": "10.4 g",
+    "calorias": "58 kcal / 100g",
+    "proteina": "0.15 g",
+    "grasas": "0.16 g",
+    "azucar": "7.2 g",
     "consejo": "Excelente fuente de fibra y vitaminas. Ideal como snack saludable."
   },
   "banana": {
     "categoria": "Fresco",
     "color": "#2ECC71",
-    "calorias": "89 kcal / 100g",
-    "proteina": "1.1 g",
-    "grasas": "0.3 g",
-    "azucar": "12.2 g",
+    "calorias": "77 kcal / 100g",
+    "proteina": "0.73 g",
+    "grasas": "0.22 g",
+    "azucar": "15.8 g",
     "consejo": "Rica en potasio y energía rápida. Perfecta para antes de hacer ejercicio."
   },
   "ceviche": {
@@ -29,9 +29,9 @@
   "chicken_wings": {
     "categoria": "Ultraprocesado",
     "color": "#FF4B4B",
-    "calorias": "203 kcal",
-    "proteina": "30 g",
-    "grasas": "8 g",
+    "calorias": "211 kcal",
+    "proteina": "20 g",
+    "grasas": "12.7 g",
     "azucar": "0 g",
     "consejo": "Alto en grasas si es frito. Mejor al horno."
   },
@@ -92,19 +92,19 @@
   "lemon": {
     "categoria": "Fresco",
     "color": "#2ECC71",
-    "calorias": "29 kcal / 100g",
-    "proteina": "1.1 g",
-    "grasas": "0.3 g",
-    "azucar": "2.5 g",
+    "calorias": "22 kcal / 100g",
+    "proteina": "0.35 g",
+    "grasas": "0.24 g",
+    "azucar": "2.52 g",
     "consejo": "Gran aporte de vitamina C. Úsalo para dar sabor sin añadir calorías."
   },
   "mango": {
     "categoria": "Fresco",
     "color": "#2ECC71",
-    "calorias": "60 kcal / 100g",
-    "proteina": "0.8 g",
-    "grasas": "0.4 g",
-    "azucar": "14 g",
+    "calorias": "71 kcal / 100g",
+    "proteina": "0.69 g",
+    "grasas": "0.68 g",
+    "azucar": "11.1 g",
     "consejo": "Rico en antioxidantes y vitaminas, aunque alto en azúcares naturales."
   },
   "monster_energy": {
@@ -119,19 +119,19 @@
   "nachos": {
     "categoria": "Ultraprocesado",
     "color": "#FF4B4B",
-    "calorias": "343 kcal / 100g",
-    "proteina": "4.3 g",
-    "grasas": "22 g",
-    "azucar": "2.2 g",
+    "calorias": "226 kcal / 100g",
+    "proteina": "8.86 g",
+    "grasas": "12.7 g",
+    "azucar": "0.9 g",
     "consejo": "Muy densos en calorías y grasas por el queso y fritura. Porción moderada."
   },
   "pizza": {
     "categoria": "Ultraprocesado",
     "color": "#FF4B4B",
-    "calorias": "266 kcal / 100g",
-    "proteina": "11 g",
-    "grasas": "10 g",
-    "azucar": "3.6 g",
+    "calorias": "280 kcal / 100g",
+    "proteina": "11.7 g",
+    "grasas": "12.6 g",
+    "azucar": "3.2 g",
     "consejo": "Alto en grasas y sodio. Consumir ocasionalmente."
   },
   "ramen": {
@@ -183,9 +183,9 @@
     "categoria": "Fresco",
     "color": "#2ECC71",
     "calorias": "30 kcal / 100g",
-    "proteina": "0.6 g",
+    "proteina": "0.87 g",
     "grasas": "0.2 g",
-    "azucar": "6.2 g",
+    "azucar": "7.2 g",
     "consejo": "Muy hidratante (92% agua) y baja en calorías. Excelente postre natural."
   }
 }
