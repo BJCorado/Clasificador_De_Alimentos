@@ -139,9 +139,9 @@ La documentación completa se encuentra en la carpeta `docs/`.
 
 | Documento | Descripción |
 |---|---|
-| [ManualTecnico.pdf](docs/Manual Tecnico.pdf) | Instalación, configuración y arquitectura del sistema |
-| [ManualUsuario.pdf](docs/manual_de_usuario.pdf) | Guía de uso de la aplicación |
-| [InformeFinal.pdf](docs/Informe Final.pdf) | Desarrollo, métricas y resultados del proyecto |
+| [Manual Tecnico.pdf](docs/Manual_Tecnico.pdf) | Instalación, configuración y arquitectura del sistema |
+| [Manual De Usuario.pdf](docs/manual_de_usuario.pdf) | Guía de uso de la aplicación |
+| [Informe Final.pdf](docs/Informe_Final.pdf) | Desarrollo, métricas y resultados del proyecto |
 | [DERCAS.pdf](docs/DERCAS.pdf) | Análisis y diseño del sistema |
 
 ---
