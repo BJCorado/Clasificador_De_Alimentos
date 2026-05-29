@@ -789,6 +789,9 @@ if modo == "Cámara":
                                     "-"
                                 )
                             )
+                            st.caption(
+    "La información mostrada es aproximada y con fines educativos, NO reemplaza la evaluación de un nutricionista, médico o especialista en salud."
+)
 
                     break
 
@@ -936,3 +939,6 @@ else:
                         "-"
                     )
                 )
+                st.caption(
+    "La información mostrada es aproximada y con fines educativos, NO reemplaza la evaluación de un nutricionista, médico o especialista en salud."
+)
