@@ -78,11 +78,17 @@ Características principales:
 
 # Dataset Utilizado
 
-El modelo fue entrenado utilizando:
+El modelo fue entrenado utilizando los siguientes datasets:
 
-- Food-101 (12 clases)
-- Fruits-360 (5 clases)
-- Imágenes locales (4 clases)
+- [Food-101](https://www.kaggle.com/datasets/dansbecker/food-101)
+- [Fruits-262](https://www.kaggle.com/datasets/aelchimminut/fruits262)
+- Imágenes locales recopiladas por el equipo del proyecto
+
+## Distribución utilizada
+
+- Food-101 → 12 clases
+- Fruits-262 → 5 clases
+- Imágenes locales → 4 clases
 
 ---
 
@@ -172,9 +178,15 @@ El proyecto utiliza GitHub como sistema de control de versiones y trazabilidad d
 
 ---
 
-# Equipo de Desarrollo
+# Equipo del Proyecto
 
-Proyecto realizado por estudiantes de la Universidad Mariano Gálvez de Guatemala para el curso de Inteligencia Artificial.
+| Integrante | Perfil |
+|---|---|
+| <img src="https://github.com/BJCorado.png" width="70"> | [BJCorado](https://github.com/BJCorado) |
+| <img src="https://github.com/martinez132.png" width="70"> | [martinez132](https://github.com/martinez132) |
+| <img src="https://github.com/DAOM43.png" width="70"> | [DAOM43](https://github.com/DAOM43) |
+| <img src="https://github.com/Aljulio.png" width="70"> | [Aljulio](https://github.com/Aljulio) |
+| <img src="https://github.com/waynergt.png" width="70"> | [waynergt](https://github.com/waynergt) |
 
 ---
 
